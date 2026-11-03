@@ -1,0 +1,385 @@
+{
+	"info": {
+		"_postman_id": "washpoint-api-cie61207",
+		"name": "WashPoint REST API - CIE61207",
+		"description": "Koleksi Postman untuk WashPoint REST API (Sistem Manajemen Laundry) - Laravel 12",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8000/api",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "0. API Health Check",
+			"request": {
+				"method": "GET",
+				"header": [
+					{ "key": "Accept", "value": "application/json" }
+				],
+				"url": {
+					"raw": "{{base_url}}",
+					"host": ["{{base_url}}"]
+				}
+			}
+		},
+		{
+			"name": "1. Users (Auth & Pengguna)",
+			"item": [
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/users", "host": ["{{base_url}}"], "path": ["users"] }
+					}
+				},
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Kasir Laundry A\",\n    \"email\": \"kasir@washpoint.test\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": { "raw": "{{base_url}}/users", "host": ["{{base_url}}"], "path": ["users"] }
+					}
+				},
+				{
+					"name": "Get User Detail",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/users/1", "host": ["{{base_url}}"], "path": ["users", "1"] }
+					}
+				},
+				{
+					"name": "Update User (PUT/PATCH)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Kasir Laundry Utama\"\n}"
+						},
+						"url": { "raw": "{{base_url}}/users/1", "host": ["{{base_url}}"], "path": ["users", "1"] }
+					}
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/users/1", "host": ["{{base_url}}"], "path": ["users", "1"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Service Types (Anggota 1)",
+			"item": [
+				{
+					"name": "Get All Service Types",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/service-types", "host": ["{{base_url}}"], "path": ["service-types"] }
+					}
+				},
+				{
+					"name": "Create Service Type",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": 1,\n    \"name\": \"Cuci Kering Setrika\",\n    \"price_per_kg\": 8000,\n    \"estimated_hours\": 24,\n    \"is_active\": true\n}"
+						},
+						"url": { "raw": "{{base_url}}/service-types", "host": ["{{base_url}}"], "path": ["service-types"] }
+					}
+				},
+				{
+					"name": "Get Service Type Detail",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/service-types/1", "host": ["{{base_url}}"], "path": ["service-types", "1"] }
+					}
+				},
+				{
+					"name": "Update Service Type (PUT/PATCH)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"price_per_kg\": 9000,\n    \"estimated_hours\": 18\n}"
+						},
+						"url": { "raw": "{{base_url}}/service-types/1", "host": ["{{base_url}}"], "path": ["service-types", "1"] }
+					}
+				},
+				{
+					"name": "Delete Service Type",
+					"request": {
+						"method": "DELETE",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/service-types/1", "host": ["{{base_url}}"], "path": ["service-types", "1"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Laundry Orders (Anggota 2)",
+			"item": [
+				{
+					"name": "Get All Laundry Orders",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/laundry-orders", "host": ["{{base_url}}"], "path": ["laundry-orders"] }
+					}
+				},
+				{
+					"name": "Create Laundry Order",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": 1,\n    \"service_type_id\": 1,\n    \"customer_name\": \"Andi Pratama\",\n    \"customer_phone\": \"081234567890\",\n    \"weight_kg\": 4.5,\n    \"total_price\": 36000,\n    \"status\": \"received\",\n    \"notes\": \"Baju kemeja putih harap dipisah\"\n}"
+						},
+						"url": { "raw": "{{base_url}}/laundry-orders", "host": ["{{base_url}}"], "path": ["laundry-orders"] }
+					}
+				},
+				{
+					"name": "Get Laundry Order Detail",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/laundry-orders/1", "host": ["{{base_url}}"], "path": ["laundry-orders", "1"] }
+					}
+				},
+				{
+					"name": "Update Laundry Order (PUT/PATCH)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"processing\"\n}"
+						},
+						"url": { "raw": "{{base_url}}/laundry-orders/1", "host": ["{{base_url}}"], "path": ["laundry-orders", "1"] }
+					}
+				},
+				{
+					"name": "Delete Laundry Order",
+					"request": {
+						"method": "DELETE",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/laundry-orders/1", "host": ["{{base_url}}"], "path": ["laundry-orders", "1"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Payments (Anggota 3)",
+			"item": [
+				{
+					"name": "Get All Payments",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/payments", "host": ["{{base_url}}"], "path": ["payments"] }
+					}
+				},
+				{
+					"name": "Create Payment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": 1,\n    \"laundry_order_id\": 1,\n    \"amount\": 36000,\n    \"method\": \"qris\",\n    \"payment_status\": \"paid\"\n}"
+						},
+						"url": { "raw": "{{base_url}}/payments", "host": ["{{base_url}}"], "path": ["payments"] }
+					}
+				},
+				{
+					"name": "Get Payment Detail",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/payments/1", "host": ["{{base_url}}"], "path": ["payments", "1"] }
+					}
+				},
+				{
+					"name": "Update Payment (PUT/PATCH)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"payment_status\": \"paid\"\n}"
+						},
+						"url": { "raw": "{{base_url}}/payments/1", "host": ["{{base_url}}"], "path": ["payments", "1"] }
+					}
+				},
+				{
+					"name": "Delete Payment",
+					"request": {
+						"method": "DELETE",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/payments/1", "host": ["{{base_url}}"], "path": ["payments", "1"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Pickup Schedules (Anggota 4)",
+			"item": [
+				{
+					"name": "Get All Pickup Schedules",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/pickup-schedules", "host": ["{{base_url}}"], "path": ["pickup-schedules"] }
+					}
+				},
+				{
+					"name": "Create Pickup Schedule",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": 1,\n    \"laundry_order_id\": 1,\n    \"scheduled_at\": \"2026-11-03 10:00:00\",\n    \"type\": \"pickup\",\n    \"address\": \"Kost Griya Nyaman No. 12, Sleman\",\n    \"status\": \"scheduled\"\n}"
+						},
+						"url": { "raw": "{{base_url}}/pickup-schedules", "host": ["{{base_url}}"], "path": ["pickup-schedules"] }
+					}
+				},
+				{
+					"name": "Get Pickup Schedule Detail",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/pickup-schedules/1", "host": ["{{base_url}}"], "path": ["pickup-schedules", "1"] }
+					}
+				},
+				{
+					"name": "Update Pickup Schedule (PUT/PATCH)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"completed\"\n}"
+						},
+						"url": { "raw": "{{base_url}}/pickup-schedules/1", "host": ["{{base_url}}"], "path": ["pickup-schedules", "1"] }
+					}
+				},
+				{
+					"name": "Delete Pickup Schedule",
+					"request": {
+						"method": "DELETE",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/pickup-schedules/1", "host": ["{{base_url}}"], "path": ["pickup-schedules", "1"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Order Status Histories (Anggota 5)",
+			"item": [
+				{
+					"name": "Get All Status Histories",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/order-status-histories", "host": ["{{base_url}}"], "path": ["order-status-histories"] }
+					}
+				},
+				{
+					"name": "Create Status History",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": 1,\n    \"laundry_order_id\": 1,\n    \"status\": \"washing\",\n    \"note\": \"Pakaian sedang dicuci dengan deterjen khusus\"\n}"
+						},
+						"url": { "raw": "{{base_url}}/order-status-histories", "host": ["{{base_url}}"], "path": ["order-status-histories"] }
+					}
+				},
+				{
+					"name": "Get Status History Detail",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/order-status-histories/1", "host": ["{{base_url}}"], "path": ["order-status-histories", "1"] }
+					}
+				},
+				{
+					"name": "Update Status History (PUT/PATCH)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"note\": \"Pakaian telah selesai dicuci dan masuk ke mesin pengering\"\n}"
+						},
+						"url": { "raw": "{{base_url}}/order-status-histories/1", "host": ["{{base_url}}"], "path": ["order-status-histories", "1"] }
+					}
+				},
+				{
+					"name": "Delete Status History",
+					"request": {
+						"method": "DELETE",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": { "raw": "{{base_url}}/order-status-histories/1", "host": ["{{base_url}}"], "path": ["order-status-histories", "1"] }
+					}
+				}
+			]
+		}
+	]
+}
+
