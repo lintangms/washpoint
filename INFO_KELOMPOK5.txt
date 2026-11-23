@@ -1,15 +1,20 @@
 ================================================================================
 INFORMASI PENGUMPULAN TUGAS KELOMPOK 5
-Ketua       : Lintang Muhammad Shiddiq - 255150607111009
-Anggota 1   : Eka Wahyu Maulidan - 255150600111029
-Anggota 2   : Mayqi Elang Putra Gufron - 255150601111003
-Anggota 3   : Muhammad Syahrial Alfadiaz - 255150600111027
-Anggota 4   : Rifky Achmad Arifiansyah - 255150607111003
-
 Mata Kuliah : Teknologi dan Sistem Terintegrasi
+Kelas       : B
 ================================================================================
 
-1. KONFIGURASI DATABASE (.env)
+1. DAFTAR ANGGOTA KELOMPOK (NAMA, NIM, DAN TABEL YANG DIKERJAKAN)
+--------------------------------------------------------------------------------
+- Ketua     : Lintang Muhammad Shiddiq   | NIM: 255150607111009 | Tabel: laundry_orders
+- Anggota 1 : Eka Wahyu Maulidan         | NIM: 255150600111029 | Tabel: service_types
+- Anggota 2 : Rifky Achmad Arifiansyah   | NIM: 255150607111003 | Tabel: payments
+- Anggota 3 : Muhammad Syahrial Alfadiaz | NIM: 255150600111027 | Tabel: pickup_schedules
+- Anggota 4 : Mayqi Elang Putra Gufron   | NIM: 255150601111003 | Tabel: order_status_histories
+- Bersama   : Seluruh Anggota Kelompok 5 | Tabel Wajib Kelompok : users (autentikasi & role)
+
+
+2. KONFIGURASI DATABASE (.env)
 --------------------------------------------------------------------------------
 DB_CONNECTION : mysql
 DB_HOST       : 127.0.0.1
@@ -25,7 +30,7 @@ Catatan Setup Cepat:
 4. Jalankan `php artisan serve` (Base URL: http://127.0.0.1:8000/api)
 
 
-2. KREDENSIAL AKUN TESTING (HASIL DATABASE SEEDER)
+3. KREDENSIAL AKUN TESTING (HASIL DATABASE SEEDER)
 --------------------------------------------------------------------------------
 Semua akun di bawah ini otomatis dibuat saat menjalankan `php artisan db:seed`:
 
@@ -46,17 +51,17 @@ Semua akun di bawah ini otomatis dibuat saat menjalankan `php artisan db:seed`:
     - Password : user123
 
 
-3. STRUKTUR TABEL & RELASI
+4. STRUKTUR TABEL & RELASI
 --------------------------------------------------------------------------------
-- users                  : Tabel induk autentikasi & role (admin / user)
-- service_types          : Anggota 1 - FK user_id -> users.id
-- laundry_orders         : Anggota 2 - FK user_id -> users.id, service_type_id -> service_types.id
-- payments               : Anggota 3 - FK user_id -> users.id, laundry_order_id -> laundry_orders.id
-- pickup_schedules       : Anggota 4 - FK user_id -> users.id, laundry_order_id -> laundry_orders.id
-- order_status_histories : Anggota 5 - FK user_id -> users.id, laundry_order_id -> laundry_orders.id
+- users                  : Tabel wajib kelompok (autentikasi & role: admin / user)
+- service_types          : Eka Wahyu Maulidan         - FK user_id -> users.id
+- laundry_orders         : Lintang Muhammad Shiddiq   - FK user_id -> users.id, service_type_id -> service_types.id
+- payments               : Rifky Achmad Arifiansyah   - FK user_id -> users.id, laundry_order_id -> laundry_orders.id
+- pickup_schedules       : Muhammad Syahrial Alfadiaz - FK user_id -> users.id, laundry_order_id -> laundry_orders.id
+- order_status_histories : Mayqi Elang Putra Gufron   - FK user_id -> users.id, laundry_order_id -> laundry_orders.id
 
 
-4. DAFTAR ENDPOINT API & HAK AKSES
+5. DAFTAR ENDPOINT API & HAK AKSES
 --------------------------------------------------------------------------------
 Base URL: http://127.0.0.1:8000/api
 Header Wajib untuk Endpoint Terproteksi:
@@ -76,12 +81,12 @@ B. AUTENTIKASI TERPROTEKSI (Login: user & admin)
 
 C. RESOURCE UTAMA & 5 MODUL ANGGOTA (Login: Bearer Token)
   Berlaku untuk seluruh resource berikut:
-  - /api/users                                (Manajemen Users)
-  - /api/service-types                        (Anggota 1: Jenis Layanan Laundry)
-  - /api/laundry-orders                       (Anggota 2: Pesanan Laundry)
-  - /api/payments                             (Anggota 3: Pembayaran)
-  - /api/pickup-schedules                     (Anggota 4: Jadwal Pickup/Delivery)
-  - /api/order-status-histories               (Anggota 5: Riwayat Status Pesanan)
+  - /api/users                                (Bersama: Manajemen Users)
+  - /api/service-types                        (Eka Wahyu Maulidan: Jenis Layanan Laundry)
+  - /api/laundry-orders                       (Lintang Muhammad Shiddiq: Pesanan Laundry)
+  - /api/payments                             (Rifky Achmad Arifiansyah: Pembayaran)
+  - /api/pickup-schedules                     (Muhammad Syahrial Alfadiaz: Jadwal Pickup/Delivery)
+  - /api/order-status-histories               (Mayqi Elang Putra Gufron: Riwayat Status Pesanan)
 
   Method & Hak Akses pada setiap {resource}:
   GET    /api/{resource}                      | user & admin | Read semua data (beserta relasi)
@@ -92,7 +97,7 @@ C. RESOURCE UTAMA & 5 MODUL ANGGOTA (Login: Bearer Token)
   DELETE /api/{resource}/{id}                 | HANYA admin (role user ditolak 403 Forbidden)
 
 Catatan Pengujian Nilai Tambah (Ownership):
-- Login sebagai `user@washpoint.test` (ID 2), coba PATCH `/api/service-types/1` (milik user 1) -> 200 OK.
-- Tetap pakai token `user@washpoint.test`, coba PATCH `/api/service-types/2` (milik user2) -> 403 Forbidden.
+- Login sebagai `user@washpoint.test`, coba PATCH `/api/service-types/1` (milik `user@washpoint.test`) -> 200 OK.
+- Tetap pakai token `user@washpoint.test`, coba PATCH `/api/service-types/2` (milik `user2@washpoint.test`) -> 403 Forbidden.
 - Login sebagai `admin@washpoint.test`, coba PATCH dan DELETE `/api/service-types/2` -> 200 OK.
 ================================================================================
