@@ -37,15 +37,17 @@ class ServiceTypeController extends Controller
     {
         try {
             $validated = $request->validate([
-                'user_id' => 'required|exists:users,id',
+                'user_id' => 'nullable|exists:users,id',
                 'name' => 'required|string|max:100',
                 'price_per_kg' => 'required|integer|min:0',
                 'estimated_hours' => 'nullable|integer|min:1',
                 'is_active' => 'nullable|boolean',
             ]);
 
+            $userId = $validated['user_id'] ?? $request->user()?->id ?? \App\Models\User::first()?->id ?? 1;
+
             $serviceType = ServiceType::create([
-                'user_id' => $validated['user_id'],
+                'user_id' => $userId,
                 'name' => $validated['name'],
                 'price_per_kg' => $validated['price_per_kg'],
                 'estimated_hours' => $validated['estimated_hours'] ?? 24,

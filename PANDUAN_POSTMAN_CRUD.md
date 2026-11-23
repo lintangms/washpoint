@@ -6,54 +6,30 @@
 
 ---
 
-## CARA CEPAT IMPORT KE POSTMAN:
-1. Buka aplikasi **Postman**.
-2. Klik tombol **Import** (di kiri atas).
-3. Pilih atau drag file **`WashPoint_API.postman_collection.json`** yang ada di folder project.
-4. Pastikan server Laravel Anda menyala dengan perintah di terminal:
-   ```bash
-   php artisan serve
-   ```
-5. URL otomatis menggunakan variabel `{{base_url}}` = `http://127.0.0.1:8000/api`.
+> [!TIP]
+> **Pembaruan Otomatisasi ID:**
+> - Saat melakukan **CREATE (POST)**, Anda **TIDAK PERLU** lagi memasukkan `id` maupun `user_id`!
+> - `id` otomatis bertambah (**Auto Increment** di database).
+> - `user_id` otomatis diambil dari akun yang sedang login melalui **Bearer Token**.
+> - ID hanya digunakan saat **READ Detail (GET)**, **UPDATE (PUT/PATCH)**, dan **DELETE** di bagian URL: `/api/{resource}/{id}`.
 
 ---
 
 ## 1. TAHAP AUTENTIKASI (MENDAPATKAN TOKEN)
 
-Semua endpoint resource dilindungi oleh token Sanctum. Anda harus login untuk mendapatkan token Bearer.
-
 ### A. Register Akun Role `user`
 - **Method:** `POST`
 - **URL:** `{{base_url}}/register`
-- **Headers:**
-  - `Content-Type: application/json`
-  - `Accept: application/json`
 - **Body (raw JSON):**
   ```json
   {
       "name": "Petugas Budi",
-      "email": "budi@washpoint.test",
+      "email": "budi.kasir@washpoint.test",
       "password": "password123",
       "role": "user"
   }
   ```
-- **Response Sukses (201 Created):**
-  ```json
-  {
-      "success": true,
-      "message": "Registrasi berhasil",
-      "data": {
-          "user": {
-              "id": 1,
-              "name": "Petugas Budi",
-              "email": "budi@washpoint.test",
-              "role": "user"
-          },
-          "access_token": "1|pZ9x...token...",
-          "token_type": "Bearer"
-      }
-  }
-  ```
+- **Response (201 Created):** Salin `access_token` untuk token role user (CRU).
 
 ---
 
@@ -64,301 +40,156 @@ Semua endpoint resource dilindungi oleh token Sanctum. Anda harus login untuk me
   ```json
   {
       "name": "Super Admin",
-      "email": "admin@washpoint.test",
+      "email": "admin.utama@washpoint.test",
       "password": "password123",
       "role": "admin"
   }
   ```
-- **Response Sukses (201 Created):**
-  ```json
-  {
-      "success": true,
-      "message": "Registrasi berhasil",
-      "data": {
-          "user": {
-              "id": 2,
-              "name": "Super Admin",
-              "email": "admin@washpoint.test",
-              "role": "admin"
-          },
-          "access_token": "2|kLm7...token...",
-          "token_type": "Bearer"
-      }
-  }
-  ```
+- **Response (201 Created):** Salin `access_token` untuk token role admin (CRUD Penuh).
 
 ---
 
-### C. Login (Mendapatkan Token Aktif)
-- **Method:** `POST`
-- **URL:** `{{base_url}}/login`
-- **Body (raw JSON):**
-  ```json
-  {
-      "email": "admin@washpoint.test",
-      "password": "password123"
-  }
-  ```
-- **Response Sukses (200 OK):**
-  Salin nilai `access_token` dari respon ini untuk digunakan pada tab **Authorization** -> **Bearer Token** di request selanjutnya.
+## 2. PENGUJIAN HAK AKSES CRU VS CRUD
+
+- **Role `user`:** Hanya bisa **CRU** (*Create, Read, Update*). Request **DELETE** ditolak **403 Forbidden**.
+- **Role `admin`:** Bisa **CRUD** penuh (*Create, Read, Update, Delete*).
 
 ---
 
-## 2. PENGUJIAN HAK AKSES CRU VS CRUD (USER VS ADMIN)
+## 3. CONTOH BODY REQUEST CREATE (TANPA PERLU INPUT ID)
 
-> [!IMPORTANT]
-> **Aturan Otorisasi:**
-> - Role **`user`** hanya bisa **CRU** (*Create, Read, Update*). Jika mencoba **DELETE**, akan ditolak dengan status **403 Forbidden**.
-> - Role **`admin`** bisa **CRUD** (*Create, Read, Update, Delete*) secara penuh.
-
-### Uji 1: Role `user` Melakukan DELETE (Harus Ditolak 403 Forbidden)
-- **Token:** Gunakan token milik `Petugas Budi` (role `user`).
-- **Method:** `DELETE`
-- **URL:** `{{base_url}}/service-types/1`
-- **Response (403 Forbidden):**
-  ```json
-  {
-      "success": false,
-      "message": "Akses ditolak (Forbidden). Role 'user' hanya memiliki hak akses CRU (Create, Read, Update). Tindakan DELETE hanya dapat dilakukan oleh role 'admin'."
-  }
-  ```
-
-### Uji 2: Role `admin` Melakukan DELETE (Harus Berhasil 200 OK)
-- **Token:** Gunakan token milik `Super Admin` (role `admin`).
-- **Method:** `DELETE`
-- **URL:** `{{base_url}}/service-types/1`
-- **Response (200 OK):**
-  ```json
-  {
-      "success": true,
-      "message": "Jenis layanan berhasil dihapus",
-      "data": null
-  }
-  ```
+Setiap request menyertakan Header:
+`Authorization: Bearer <token>` | `Content-Type: application/json` | `Accept: application/json`
 
 ---
 
-## 3. PENGUJIAN CRUD PER ANGGOTA KELOMPOK
+### 1. Anggota 1: `service_types` (Jenis Layanan Laundry)
 
-Setiap request di bawah ini wajib menyertakan header:
-- `Authorization: Bearer <token>`
-- `Content-Type: application/json`
-- `Accept: application/json`
-
----
-
-### ANGGOTA 1: `service_types` (Jenis Layanan Laundry)
-
-#### 1. [CREATE] Tambah Layanan Baru
+#### [CREATE] Tambah Layanan
 - **Method:** `POST`
 - **URL:** `{{base_url}}/service-types`
-- **Body:**
+- **Body (Tidak perlu input ID apapun):**
   ```json
   {
-      "user_id": 1,
       "name": "Cuci Kering Setrika Express",
       "price_per_kg": 10000,
       "estimated_hours": 12,
       "is_active": true
   }
   ```
-- **Response (201 Created):**
-  ```json
-  {
-      "success": true,
-      "message": "Jenis layanan berhasil ditambahkan",
-      "data": {
-          "id": 1,
-          "user_id": 1,
-          "name": "Cuci Kering Setrika Express",
-          "price_per_kg": 10000,
-          "estimated_hours": 12,
-          "is_active": true
-      }
-  }
-  ```
 
-#### 2. [READ ALL] Tampilkan Semua Layanan
-- **Method:** `GET`
-- **URL:** `{{base_url}}/service-types`
-- **Response (200 OK):** Menampilkan array list layanan beserta data relasi `user`.
-
-#### 3. [READ DETAIL] Tampilkan Detail Layanan
-- **Method:** `GET`
-- **URL:** `{{base_url}}/service-types/1`
-- **Response (200 OK):** Menampilkan detail layanan beserta data relasi `user` dan `laundry_orders`.
-
-#### 4. [UPDATE] Perbarui Harga / Estimasi Waktu
-- **Method:** `PATCH` (atau `PUT`)
+#### [UPDATE] Perbarui Layanan (ID ditaruh di URL)
+- **Method:** `PATCH`
 - **URL:** `{{base_url}}/service-types/1`
 - **Body:**
   ```json
   {
-      "price_per_kg": 11000,
-      "estimated_hours": 8
+      "price_per_kg": 11000
   }
   ```
-- **Response (200 OK):** Data berhasil diperbarui.
 
-#### 5. [DELETE] Hapus Layanan (Admin Only)
+#### [DELETE] Hapus Layanan (ID ditaruh di URL, Admin Only)
 - **Method:** `DELETE`
 - **URL:** `{{base_url}}/service-types/1`
-- **Response (200 OK jika admin, 403 jika user)**
 
 ---
 
-### ANGGOTA 2: `laundry_orders` (Pesanan Laundry)
+### 2. Anggota 2: `laundry_orders` (Pesanan Laundry)
 
-#### 1. [CREATE] Buat Pesanan Baru
+#### [CREATE] Buat Pesanan Baru
 - **Method:** `POST`
 - **URL:** `{{base_url}}/laundry-orders`
-- **Body:**
+- **Body (Tidak perlu input ID):**
   ```json
   {
-      "user_id": 1,
-      "service_type_id": 1,
       "customer_name": "Rian Ardiansyah",
       "customer_phone": "081298765432",
       "weight_kg": 4.5,
-      "total_price": 49500,
-      "status": "received",
       "notes": "Pakaian kemeja tolong disetrika rapi"
   }
   ```
-- **Response (201 Created)**
+  *(Total harga dan jenis layanan otomatis dikalkulasikan jika tidak diisi)*
 
-#### 2. [READ ALL] Tampilkan Daftar Pesanan
-- **Method:** `GET`
-- **URL:** `{{base_url}}/laundry-orders`
-- **Response (200 OK):** Menampilkan pesanan dengan relasi eager loading `user` dan `service_type`.
-
-#### 3. [READ DETAIL] Tampilkan Detail Pesanan
-- **Method:** `GET`
-- **URL:** `{{base_url}}/laundry-orders/1`
-- **Response (200 OK):** Menampilkan detail pesanan lengkap beserta seluruh relasi: `service_type`, `payments`, `pickup_schedules`, dan `order_status_histories`.
-
-#### 4. [UPDATE] Perbarui Status Pesanan
+#### [UPDATE] Ubah Status Pesanan
 - **Method:** `PATCH`
 - **URL:** `{{base_url}}/laundry-orders/1`
-- **Body:**
-  ```json
-  {
-      "status": "processing"
-  }
-  ```
-- **Response (200 OK)**
+- **Body:** `{"status": "processing"}`
 
-#### 5. [DELETE] Hapus Pesanan (Admin Only)
+#### [DELETE] Hapus Pesanan (Admin Only)
 - **Method:** `DELETE`
 - **URL:** `{{base_url}}/laundry-orders/1`
 
 ---
 
-### ANGGOTA 3: `payments` (Pembayaran Laundry)
+### 3. Anggota 3: `payments` (Pembayaran Laundry)
 
-#### 1. [CREATE] Catat Pembayaran
+#### [CREATE] Catat Pembayaran
 - **Method:** `POST`
 - **URL:** `{{base_url}}/payments`
-- **Body:**
+- **Body (Praktis, tanpa perlu input ID):**
   ```json
   {
-      "user_id": 1,
-      "laundry_order_id": 1,
-      "amount": 49500,
+      "amount": 45000,
       "method": "qris",
       "payment_status": "paid"
   }
   ```
-- **Response (201 Created)**
+  *(Otomatis terhubung ke user yang sedang login dan pesanan terkait)*
 
-#### 2. [READ ALL & DETAIL]
-- `GET {{base_url}}/payments`
-- `GET {{base_url}}/payments/1`
-
-#### 3. [UPDATE] Perbarui Status Pembayaran
+#### [UPDATE] Perbarui Status Pembayaran
 - **Method:** `PATCH`
 - **URL:** `{{base_url}}/payments/1`
-- **Body:**
-  ```json
-  {
-      "payment_status": "paid"
-  }
-  ```
+- **Body:** `{"payment_status": "paid"}`
 
-#### 4. [DELETE] Hapus Pembayaran (Admin Only)
+#### [DELETE] Hapus Pembayaran (Admin Only)
 - **Method:** `DELETE`
 - **URL:** `{{base_url}}/payments/1`
 
 ---
 
-### ANGGOTA 4: `pickup_schedules` (Jadwal Penjemputan / Pengantaran)
+### 4. Anggota 4: `pickup_schedules` (Jadwal Penjemputan / Delivery)
 
-#### 1. [CREATE] Buat Jadwal
+#### [CREATE] Buat Jadwal
 - **Method:** `POST`
 - **URL:** `{{base_url}}/pickup-schedules`
-- **Body:**
+- **Body (Tanpa perlu input ID):**
   ```json
   {
-      "user_id": 1,
-      "laundry_order_id": 1,
-      "scheduled_at": "2026-11-25 09:30:00",
       "type": "delivery",
       "address": "Kost Graha Mahasiswa No. 15, Sleman",
       "status": "scheduled"
   }
   ```
-- **Response (201 Created)**
 
-#### 2. [READ ALL & DETAIL]
-- `GET {{base_url}}/pickup-schedules`
-- `GET {{base_url}}/pickup-schedules/1`
-
-#### 3. [UPDATE] Ubah Status Jadwal
+#### [UPDATE] Ubah Status Jadwal
 - **Method:** `PATCH`
 - **URL:** `{{base_url}}/pickup-schedules/1`
-- **Body:**
-  ```json
-  {
-      "status": "completed"
-  }
-  ```
+- **Body:** `{"status": "completed"}`
 
-#### 4. [DELETE] Hapus Jadwal (Admin Only)
+#### [DELETE] Hapus Jadwal (Admin Only)
 - **Method:** `DELETE`
 - **URL:** `{{base_url}}/pickup-schedules/1`
 
 ---
 
-### ANGGOTA 5: `order_status_histories` (Riwayat Status Pesanan)
+### 5. Anggota 5: `order_status_histories` (Riwayat Status Pesanan)
 
-#### 1. [CREATE] Tambah Riwayat Log Status
+#### [CREATE] Tambah Catatan Status
 - **Method:** `POST`
 - **URL:** `{{base_url}}/order-status-histories`
-- **Body:**
+- **Body (Tanpa perlu input ID):**
   ```json
   {
-      "user_id": 1,
-      "laundry_order_id": 1,
       "status": "ironing",
       "note": "Pakaian sedang dalam proses setrika uap"
   }
   ```
-- **Response (201 Created)**
 
-#### 2. [READ ALL & DETAIL]
-- `GET {{base_url}}/order-status-histories`
-- `GET {{base_url}}/order-status-histories/1`
-
-#### 3. [UPDATE] Perbarui Catatan Log Status
+#### [UPDATE] Perbarui Catatan Status
 - **Method:** `PATCH`
 - **URL:** `{{base_url}}/order-status-histories/1`
-- **Body:**
-  ```json
-  {
-      "note": "Proses setrika selesai, pakaian siap dikemas rapi"
-  }
-  ```
+- **Body:** `{"note": "Proses setrika selesai, pakaian siap diambil"}`
 
-#### 4. [DELETE] Hapus Riwayat Status (Admin Only)
+#### [DELETE] Hapus Log Status (Admin Only)
 - **Method:** `DELETE`
 - **URL:** `{{base_url}}/order-status-histories/1`

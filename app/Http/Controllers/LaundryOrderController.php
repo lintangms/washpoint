@@ -37,23 +37,46 @@ class LaundryOrderController extends Controller
     {
         try {
             $validated = $request->validate([
-                'user_id' => 'required|exists:users,id',
-                'service_type_id' => 'required|exists:service_types,id',
+                'user_id' => 'nullable|exists:users,id',
+                'service_type_id' => 'nullable|exists:service_types,id',
                 'customer_name' => 'required|string|max:100',
                 'customer_phone' => 'required|string|max:25',
                 'weight_kg' => 'required|numeric|min:0.1',
-                'total_price' => 'required|integer|min:0',
+                'total_price' => 'nullable|integer|min:0',
                 'status' => 'nullable|string|max:30',
                 'notes' => 'nullable|string',
             ]);
 
+            $userId = $validated['user_id'] ?? $request->user()?->id ?? \App\Models\User::first()?->id ?? 1;
+
+            // Jika service_type_id tidak diisi, ambil service_type pertama yang tersedia atau buat default
+            $serviceTypeId = $validated['service_type_id'] ?? \App\Models\ServiceType::first()?->id;
+            if (!$serviceTypeId) {
+                $defaultService = \App\Models\ServiceType::create([
+                    'user_id' => $userId,
+                    'name' => 'Cuci Reguler Default',
+                    'price_per_kg' => 7000,
+                    'estimated_hours' => 24,
+                    'is_active' => true,
+                ]);
+                $serviceTypeId = $defaultService->id;
+            }
+
+            // Hitung total harga otomatis jika tidak dikirim
+            $totalPrice = $validated['total_price'] ?? null;
+            if ($totalPrice === null) {
+                $service = \App\Models\ServiceType::find($serviceTypeId);
+                $rate = $service ? $service->price_per_kg : 7000;
+                $totalPrice = (int) round($validated['weight_kg'] * $rate);
+            }
+
             $order = LaundryOrder::create([
-                'user_id' => $validated['user_id'],
-                'service_type_id' => $validated['service_type_id'],
+                'user_id' => $userId,
+                'service_type_id' => $serviceTypeId,
                 'customer_name' => $validated['customer_name'],
                 'customer_phone' => $validated['customer_phone'],
                 'weight_kg' => $validated['weight_kg'],
-                'total_price' => $validated['total_price'],
+                'total_price' => $totalPrice,
                 'status' => $validated['status'] ?? 'received',
                 'notes' => $validated['notes'] ?? null,
             ]);

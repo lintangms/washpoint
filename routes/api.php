@@ -60,9 +60,10 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 // ==========================================
-// 2. PROTECTED ROUTES (Middleware: auth:sanctum)
+// 2. PROTECTED ROUTES (Middleware: jwt.auth)
+// Mendukung JWT Bearer Token (panjang)
 // ==========================================
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('jwt.auth')->group(function () {
 
     // Auth Utilities
     Route::get('/me', [AuthController::class, 'me']);

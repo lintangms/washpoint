@@ -30,7 +30,7 @@ class AuthController extends Controller
                 'role' => $validated['role'] ?? 'user',
             ]);
 
-            $token = $user->createToken('auth_token')->plainTextToken;
+            $token = \App\Services\JwtService::generateToken($user);
 
             return response()->json([
                 'success' => true,
@@ -76,8 +76,8 @@ class AuthController extends Controller
                 ], 401);
             }
 
-            // Hapus token lama jika diinginkan atau langsung issue token baru
-            $token = $user->createToken('auth_token')->plainTextToken;
+            // Generate JWT Token
+            $token = \App\Services\JwtService::generateToken($user);
 
             return response()->json([
                 'success' => true,
@@ -120,11 +120,13 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         try {
-            $request->user()->currentAccessToken()->delete();
+            if ($request->user() && method_exists($request->user(), 'currentAccessToken') && $request->user()->currentAccessToken()) {
+                $request->user()->currentAccessToken()->delete();
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Logout berhasil, token telah dicabut',
+                'message' => 'Logout berhasil, sesi telah diakhiri',
                 'data' => null
             ], 200);
         } catch (Exception $e) {

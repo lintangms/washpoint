@@ -1,10 +1,1350 @@
 {
 	"info": {
-		"_postman_id": "washpoint-api-cie61207-v2",
-		"name": "WashPoint REST API - CRUD & Role Testing",
-		"description": "Koleksi Postman lengkap untuk Pengujian CRUD dan Verifikasi Otorisasi: Role User (CRU) vs Role Admin (CRUD).",
+		"_postman_id": "2d7ac593-ff6a-4b76-af6e-25e61257de36",
+		"name": "WashPoint REST API",
+		"description": "Koleksi Postman lengkap untuk Pengujian CRUD dan Verifikasi Otorisasi: Role User (CRU) vs Role Admin (CRUD). Tinggal Login lalu Send secara berurutan.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
+	"item": [
+		{
+			"name": "0. Health Check",
+			"item": [
+				{
+					"name": "API Health Check (GET /api)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Success is true\", function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.eql(true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}",
+							"host": [
+								"{{base_url}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "1. Autentikasi",
+			"item": [
+				{
+					"name": "1 Register User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var json = pm.response.json();",
+									"if (json.data && json.data.access_token) {",
+									"    pm.collectionVariables.set('user_token', json.data.access_token);",
+									"    pm.collectionVariables.set('active_token', json.data.access_token);",
+									"    pm.environment.set('user_token', json.data.access_token);",
+									"    pm.environment.set('active_token', json.data.access_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Kasir Budi\",\n    \"email\": \"budi.kasir@washpoint.test\",\n    \"password\": \"password123\",\n    \"role\": \"user\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2 Register Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var json = pm.response.json();",
+									"if (json.data && json.data.access_token) {",
+									"    pm.collectionVariables.set('admin_token', json.data.access_token);",
+									"    pm.environment.set('admin_token', json.data.access_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Super Admin\",\n    \"email\": \"admin.utama@washpoint.test\",\n    \"password\": \"password123\",\n    \"role\": \"admin\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3 Login User (CRU Token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"var json = pm.response.json();",
+									"if (json.data && json.data.access_token) {",
+									"    pm.collectionVariables.set('user_token', json.data.access_token);",
+									"    pm.collectionVariables.set('active_token', json.data.access_token);",
+									"    pm.environment.set('user_token', json.data.access_token);",
+									"    pm.environment.set('active_token', json.data.access_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"budi.kasir@washpoint.test\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "4 Login Admin (CRUD Token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"var json = pm.response.json();",
+									"if (json.data && json.data.access_token) {",
+									"    pm.collectionVariables.set('admin_token', json.data.access_token);",
+									"    pm.collectionVariables.set('active_token', json.data.access_token);",
+									"    pm.environment.set('admin_token', json.data.access_token);",
+									"    pm.environment.set('active_token', json.data.access_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin.utama@washpoint.test\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "5 Check Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{active_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"me"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Pembuktian Otorisasi",
+			"item": [
+				{
+					"name": "1 User CREATE Layanan",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"var json = pm.response.json();",
+									"if (json.data && json.data.id) {",
+									"    pm.collectionVariables.set('service_type_id', json.data.id);",
+									"    pm.environment.set('service_type_id', json.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Cuci Selimut Tebal\",\n    \"price_per_kg\": 15000,\n    \"estimated_hours\": 48,\n    \"is_active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/service-types",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"service-types"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2 User READ Layanan",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/service-types/{{service_type_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"service-types",
+								"{{service_type_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3 User UPDATE Layanan",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"price_per_kg\": 16000\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/service-types/{{service_type_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"service-types",
+								"{{service_type_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "4 User DELETE Layanan (403 Forbidden)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 403 Forbidden\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});",
+									"pm.test(\"Pesan menyebutkan izin CRU\", function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.message).to.include(\"CRU\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/service-types/{{service_type_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"service-types",
+								"{{service_type_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "5 Admin DELETE Layanan -> BERHASIL (200 OK)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/service-types/{{service_type_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"service-types",
+								"{{service_type_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Wahyu: service_types (CRUD)",
+			"item": [
+				{
+					"name": "Create Service Type",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var json = pm.response.json();",
+									"if (json.data && json.data.id) {",
+									"    pm.collectionVariables.set('service_type_id', json.data.id);",
+									"    pm.environment.set('service_type_id', json.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{active_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Cuci Kering Setrika Reguler\",\n    \"price_per_kg\": 8000,\n    \"estimated_hours\": 24,\n    \"is_active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/service-types",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"service-types"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Service Types",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{active_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/service-types",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"service-types"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Service Type Detail",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{active_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/service-types/{{service_type_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"service-types",
+								"{{service_type_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Service Type",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{active_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"price_per_kg\": 8500\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/service-types/{{service_type_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"service-types",
+								"{{service_type_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Service Type (Admin Only)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/service-types/{{service_type_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"service-types",
+								"{{service_type_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Lintang: laundry_orders (CRUD)",
+			"item": [
+				{
+					"name": "Create Laundry Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var json = pm.response.json();",
+									"if (json.data && json.data.id) {",
+									"    pm.collectionVariables.set('laundry_order_id', json.data.id);",
+									"    pm.environment.set('laundry_order_id', json.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{active_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"customer_name\": \"Andi Pratama\",\n    \"customer_phone\": \"081234567890\",\n    \"weight_kg\": 4.0,\n    \"notes\": \"Baju kemeja putih harap dipisah\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/laundry-orders",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"laundry-orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Laundry Orders",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{active_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/laundry-orders",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"laundry-orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Laundry Order Detail",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{active_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/laundry-orders/{{laundry_order_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"laundry-orders",
+								"{{laundry_order_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Laundry Order",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{active_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"processing\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/laundry-orders/{{laundry_order_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"laundry-orders",
+								"{{laundry_order_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Laundry Order (Admin Only)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/laundry-orders/{{laundry_order_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"laundry-orders",
+								"{{laundry_order_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Rifky: payments (CRUD)",
+			"item": [
+				{
+					"name": "Create Payment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var json = pm.response.json();",
+									"if (json.data && json.data.id) {",
+									"    pm.collectionVariables.set('payment_id', json.data.id);",
+									"    pm.environment.set('payment_id', json.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{active_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"amount\": 34000,\n    \"method\": \"qris\",\n    \"payment_status\": \"paid\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/payments",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"payments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Payments",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{active_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/payments",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"payments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Payment Detail",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{active_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/payments/{{payment_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"payments",
+								"{{payment_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Payment",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{active_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"payment_status\": \"paid\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/payments/{{payment_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"payments",
+								"{{payment_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Payment (Admin Only)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/payments/{{payment_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"payments",
+								"{{payment_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Dias: pickup_schedules (CRUD)",
+			"item": [
+				{
+					"name": "Create Pickup Schedule",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var json = pm.response.json();",
+									"if (json.data && json.data.id) {",
+									"    pm.collectionVariables.set('pickup_schedule_id', json.data.id);",
+									"    pm.environment.set('pickup_schedule_id', json.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{active_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"pickup\",\n    \"address\": \"Kost Griya Nyaman No. 12, Sleman\",\n    \"status\": \"scheduled\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/pickup-schedules",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pickup-schedules"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Pickup Schedules",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{active_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/pickup-schedules",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pickup-schedules"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Pickup Schedule Detail",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{active_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/pickup-schedules/{{pickup_schedule_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pickup-schedules",
+								"{{pickup_schedule_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Pickup Schedule",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{active_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"completed\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/pickup-schedules/{{pickup_schedule_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pickup-schedules",
+								"{{pickup_schedule_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Pickup Schedule (Admin Only)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/pickup-schedules/{{pickup_schedule_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pickup-schedules",
+								"{{pickup_schedule_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Elang: order_status_histories (CRUD)",
+			"item": [
+				{
+					"name": "Create Status History",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var json = pm.response.json();",
+									"if (json.data && json.data.id) {",
+									"    pm.collectionVariables.set('order_status_history_id', json.data.id);",
+									"    pm.environment.set('order_status_history_id', json.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{active_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"washing\",\n    \"note\": \"Pakaian sedang dicuci dengan deterjen khusus\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/order-status-histories",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"order-status-histories"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Status Histories",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{active_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/order-status-histories",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"order-status-histories"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Status History Detail",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{active_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/order-status-histories/{{order_status_history_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"order-status-histories",
+								"{{order_status_history_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Status History",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{active_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"note\": \"Pakaian telah selesai dicuci dan masuk ke mesin pengering\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/order-status-histories/{{order_status_history_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"order-status-histories",
+								"{{order_status_history_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Status History (Admin Only)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/order-status-histories/{{order_status_history_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"order-status-histories",
+								"{{order_status_history_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
 	"variable": [
 		{
 			"key": "base_url",
@@ -50,680 +1390,6 @@
 			"key": "order_status_history_id",
 			"value": "1",
 			"type": "string"
-		}
-	],
-	"item": [
-		{
-			"name": "0. Health Check",
-			"item": [
-				{
-					"name": "API Health Check (GET /api)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"pm.test(\"Success is true\", function () {",
-									"    var json = pm.response.json();",
-									"    pm.expect(json.success).to.eql(true);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{ "key": "Accept", "value": "application/json" }
-						],
-						"url": { "raw": "{{base_url}}", "host": ["{{base_url}}"] }
-					}
-				}
-			]
-		},
-		{
-			"name": "1. Autentikasi (Dapatkan Token User & Admin)",
-			"item": [
-				{
-					"name": "1.1 Register Regular User (Role: user)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 201\", function () {",
-									"    pm.response.to.have.status(201);",
-									"});",
-									"var json = pm.response.json();",
-									"if (json.data && json.data.access_token) {",
-									"    pm.collectionVariables.set('user_token', json.data.access_token);",
-									"    pm.collectionVariables.set('active_token', json.data.access_token);",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Content-Type", "value": "application/json" }
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"name\": \"Kasir Budi\",\n    \"email\": \"budi.kasir@washpoint.test\",\n    \"password\": \"password123\",\n    \"role\": \"user\"\n}"
-						},
-						"url": { "raw": "{{base_url}}/register", "host": ["{{base_url}}"], "path": ["register"] }
-					}
-				},
-				{
-					"name": "1.2 Register Admin (Role: admin)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 201\", function () {",
-									"    pm.response.to.have.status(201);",
-									"});",
-									"var json = pm.response.json();",
-									"if (json.data && json.data.access_token) {",
-									"    pm.collectionVariables.set('admin_token', json.data.access_token);",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Content-Type", "value": "application/json" }
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"name\": \"Super Admin\",\n    \"email\": \"admin.utama@washpoint.test\",\n    \"password\": \"password123\",\n    \"role\": \"admin\"\n}"
-						},
-						"url": { "raw": "{{base_url}}/register", "host": ["{{base_url}}"], "path": ["register"] }
-					}
-				},
-				{
-					"name": "1.3 Login User (Gunakan Token User)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"var json = pm.response.json();",
-									"if (json.data && json.data.access_token) {",
-									"    pm.collectionVariables.set('user_token', json.data.access_token);",
-									"    pm.collectionVariables.set('active_token', json.data.access_token);",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Content-Type", "value": "application/json" }
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"email\": \"budi.kasir@washpoint.test\",\n    \"password\": \"password123\"\n}"
-						},
-						"url": { "raw": "{{base_url}}/login", "host": ["{{base_url}}"], "path": ["login"] }
-					}
-				},
-				{
-					"name": "1.4 Login Admin (Gunakan Token Admin)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"var json = pm.response.json();",
-									"if (json.data && json.data.access_token) {",
-									"    pm.collectionVariables.set('admin_token', json.data.access_token);",
-									"    pm.collectionVariables.set('active_token', json.data.access_token);",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Content-Type", "value": "application/json" }
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"email\": \"admin.utama@washpoint.test\",\n    \"password\": \"password123\"\n}"
-						},
-						"url": { "raw": "{{base_url}}/login", "host": ["{{base_url}}"], "path": ["login"] }
-					}
-				},
-				{
-					"name": "1.5 Check Profile (GET /api/me)",
-					"request": {
-						"method": "GET",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{active_token}}" }
-						],
-						"url": { "raw": "{{base_url}}/me", "host": ["{{base_url}}"], "path": ["me"] }
-					}
-				}
-			]
-		},
-		{
-			"name": "2. Pembuktian Otorisasi (User CRU vs Admin CRUD)",
-			"item": [
-				{
-					"name": "2.1 [User] CREATE Layanan (POST) -> Berhasil",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status is 201 Created\", function () {",
-									"    pm.response.to.have.status(201);",
-									"});",
-									"var json = pm.response.json();",
-									"if (json.data && json.data.id) {",
-									"    pm.collectionVariables.set('service_type_id', json.data.id);",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Content-Type", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{user_token}}" }
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"user_id\": 1,\n    \"name\": \"Cuci Selimut Tebal\",\n    \"price_per_kg\": 15000,\n    \"estimated_hours\": 48,\n    \"is_active\": true\n}"
-						},
-						"url": { "raw": "{{base_url}}/service-types", "host": ["{{base_url}}"], "path": ["service-types"] }
-					}
-				},
-				{
-					"name": "2.2 [User] READ Layanan (GET) -> Berhasil",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status is 200 OK\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{user_token}}" }
-						],
-						"url": { "raw": "{{base_url}}/service-types/{{service_type_id}}", "host": ["{{base_url}}"], "path": ["service-types", "{{service_type_id}}"] }
-					}
-				},
-				{
-					"name": "2.3 [User] UPDATE Layanan (PATCH) -> Berhasil",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status is 200 OK\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "PATCH",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Content-Type", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{user_token}}" }
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"price_per_kg\": 16000\n}"
-						},
-						"url": { "raw": "{{base_url}}/service-types/{{service_type_id}}", "host": ["{{base_url}}"], "path": ["service-types", "{{service_type_id}}"] }
-					}
-				},
-				{
-					"name": "2.4 [User] DELETE Layanan -> DITOLAK (403 Forbidden)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status is 403 Forbidden\", function () {",
-									"    pm.response.to.have.status(403);",
-									"});",
-									"pm.test(\"Pesan menyebutkan izin CRU\", function () {",
-									"    var json = pm.response.json();",
-									"    pm.expect(json.message).to.include(\"CRU\");",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{user_token}}" }
-						],
-						"url": { "raw": "{{base_url}}/service-types/{{service_type_id}}", "host": ["{{base_url}}"], "path": ["service-types", "{{service_type_id}}"] }
-					}
-				},
-				{
-					"name": "2.5 [Admin] DELETE Layanan -> BERHASIL (200 OK)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status is 200 OK\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{admin_token}}" }
-						],
-						"url": { "raw": "{{base_url}}/service-types/{{service_type_id}}", "host": ["{{base_url}}"], "path": ["service-types", "{{service_type_id}}"] }
-					}
-				}
-			]
-		},
-		{
-			"name": "3. Anggota 1: service_types (CRUD)",
-			"item": [
-				{
-					"name": "Create Service Type",
-					"request": {
-						"method": "POST",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Content-Type", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{active_token}}" }
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"user_id\": 1,\n    \"name\": \"Cuci Kering Setrika Reguler\",\n    \"price_per_kg\": 8000,\n    \"estimated_hours\": 24,\n    \"is_active\": true\n}"
-						},
-						"url": { "raw": "{{base_url}}/service-types", "host": ["{{base_url}}"], "path": ["service-types"] }
-					}
-				},
-				{
-					"name": "Get All Service Types",
-					"request": {
-						"method": "GET",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{active_token}}" }
-						],
-						"url": { "raw": "{{base_url}}/service-types", "host": ["{{base_url}}"], "path": ["service-types"] }
-					}
-				},
-				{
-					"name": "Get Service Type Detail",
-					"request": {
-						"method": "GET",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{active_token}}" }
-						],
-						"url": { "raw": "{{base_url}}/service-types/1", "host": ["{{base_url}}"], "path": ["service-types", "1"] }
-					}
-				},
-				{
-					"name": "Update Service Type",
-					"request": {
-						"method": "PATCH",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Content-Type", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{active_token}}" }
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"price_per_kg\": 8500\n}"
-						},
-						"url": { "raw": "{{base_url}}/service-types/1", "host": ["{{base_url}}"], "path": ["service-types", "1"] }
-					}
-				},
-				{
-					"name": "Delete Service Type (Admin Only)",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{admin_token}}" }
-						],
-						"url": { "raw": "{{base_url}}/service-types/1", "host": ["{{base_url}}"], "path": ["service-types", "1"] }
-					}
-				}
-			]
-		},
-		{
-			"name": "4. Anggota 2: laundry_orders (CRUD)",
-			"item": [
-				{
-					"name": "Create Laundry Order",
-					"request": {
-						"method": "POST",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Content-Type", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{active_token}}" }
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"user_id\": 1,\n    \"service_type_id\": 1,\n    \"customer_name\": \"Andi Pratama\",\n    \"customer_phone\": \"081234567890\",\n    \"weight_kg\": 4.0,\n    \"total_price\": 34000,\n    \"status\": \"received\",\n    \"notes\": \"Baju kemeja putih harap dipisah\"\n}"
-						},
-						"url": { "raw": "{{base_url}}/laundry-orders", "host": ["{{base_url}}"], "path": ["laundry-orders"] }
-					}
-				},
-				{
-					"name": "Get All Laundry Orders",
-					"request": {
-						"method": "GET",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{active_token}}" }
-						],
-						"url": { "raw": "{{base_url}}/laundry-orders", "host": ["{{base_url}}"], "path": ["laundry-orders"] }
-					}
-				},
-				{
-					"name": "Get Laundry Order Detail",
-					"request": {
-						"method": "GET",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{active_token}}" }
-						],
-						"url": { "raw": "{{base_url}}/laundry-orders/1", "host": ["{{base_url}}"], "path": ["laundry-orders", "1"] }
-					}
-				},
-				{
-					"name": "Update Laundry Order",
-					"request": {
-						"method": "PATCH",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Content-Type", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{active_token}}" }
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"status\": \"processing\"\n}"
-						},
-						"url": { "raw": "{{base_url}}/laundry-orders/1", "host": ["{{base_url}}"], "path": ["laundry-orders", "1"] }
-					}
-				},
-				{
-					"name": "Delete Laundry Order (Admin Only)",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{admin_token}}" }
-						],
-						"url": { "raw": "{{base_url}}/laundry-orders/1", "host": ["{{base_url}}"], "path": ["laundry-orders", "1"] }
-					}
-				}
-			]
-		},
-		{
-			"name": "5. Anggota 3: payments (CRUD)",
-			"item": [
-				{
-					"name": "Create Payment",
-					"request": {
-						"method": "POST",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Content-Type", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{active_token}}" }
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"user_id\": 1,\n    \"laundry_order_id\": 1,\n    \"amount\": 34000,\n    \"method\": \"qris\",\n    \"payment_status\": \"paid\"\n}"
-						},
-						"url": { "raw": "{{base_url}}/payments", "host": ["{{base_url}}"], "path": ["payments"] }
-					}
-				},
-				{
-					"name": "Get All Payments",
-					"request": {
-						"method": "GET",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{active_token}}" }
-						],
-						"url": { "raw": "{{base_url}}/payments", "host": ["{{base_url}}"], "path": ["payments"] }
-					}
-				},
-				{
-					"name": "Get Payment Detail",
-					"request": {
-						"method": "GET",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{active_token}}" }
-						],
-						"url": { "raw": "{{base_url}}/payments/1", "host": ["{{base_url}}"], "path": ["payments", "1"] }
-					}
-				},
-				{
-					"name": "Update Payment",
-					"request": {
-						"method": "PATCH",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Content-Type", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{active_token}}" }
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"payment_status\": \"paid\"\n}"
-						},
-						"url": { "raw": "{{base_url}}/payments/1", "host": ["{{base_url}}"], "path": ["payments", "1"] }
-					}
-				},
-				{
-					"name": "Delete Payment (Admin Only)",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{admin_token}}" }
-						],
-						"url": { "raw": "{{base_url}}/payments/1", "host": ["{{base_url}}"], "path": ["payments", "1"] }
-					}
-				}
-			]
-		},
-		{
-			"name": "6. Anggota 4: pickup_schedules (CRUD)",
-			"item": [
-				{
-					"name": "Create Pickup Schedule",
-					"request": {
-						"method": "POST",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Content-Type", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{active_token}}" }
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"user_id\": 1,\n    \"laundry_order_id\": 1,\n    \"scheduled_at\": \"2026-11-26 10:00:00\",\n    \"type\": \"pickup\",\n    \"address\": \"Kost Griya Nyaman No. 12, Sleman\",\n    \"status\": \"scheduled\"\n}"
-						},
-						"url": { "raw": "{{base_url}}/pickup-schedules", "host": ["{{base_url}}"], "path": ["pickup-schedules"] }
-					}
-				},
-				{
-					"name": "Get All Pickup Schedules",
-					"request": {
-						"method": "GET",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{active_token}}" }
-						],
-						"url": { "raw": "{{base_url}}/pickup-schedules", "host": ["{{base_url}}"], "path": ["pickup-schedules"] }
-					}
-				},
-				{
-					"name": "Get Pickup Schedule Detail",
-					"request": {
-						"method": "GET",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{active_token}}" }
-						],
-						"url": { "raw": "{{base_url}}/pickup-schedules/1", "host": ["{{base_url}}"], "path": ["pickup-schedules", "1"] }
-					}
-				},
-				{
-					"name": "Update Pickup Schedule",
-					"request": {
-						"method": "PATCH",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Content-Type", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{active_token}}" }
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"status\": \"completed\"\n}"
-						},
-						"url": { "raw": "{{base_url}}/pickup-schedules/1", "host": ["{{base_url}}"], "path": ["pickup-schedules", "1"] }
-					}
-				},
-				{
-					"name": "Delete Pickup Schedule (Admin Only)",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{admin_token}}" }
-						],
-						"url": { "raw": "{{base_url}}/pickup-schedules/1", "host": ["{{base_url}}"], "path": ["pickup-schedules", "1"] }
-					}
-				}
-			]
-		},
-		{
-			"name": "7. Anggota 5: order_status_histories (CRUD)",
-			"item": [
-				{
-					"name": "Create Status History",
-					"request": {
-						"method": "POST",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Content-Type", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{active_token}}" }
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"user_id\": 1,\n    \"laundry_order_id\": 1,\n    \"status\": \"washing\",\n    \"note\": \"Pakaian sedang dicuci dengan deterjen khusus\"\n}"
-						},
-						"url": { "raw": "{{base_url}}/order-status-histories", "host": ["{{base_url}}"], "path": ["order-status-histories"] }
-					}
-				},
-				{
-					"name": "Get All Status Histories",
-					"request": {
-						"method": "GET",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{active_token}}" }
-						],
-						"url": { "raw": "{{base_url}}/order-status-histories", "host": ["{{base_url}}"], "path": ["order-status-histories"] }
-					}
-				},
-				{
-					"name": "Get Status History Detail",
-					"request": {
-						"method": "GET",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{active_token}}" }
-						],
-						"url": { "raw": "{{base_url}}/order-status-histories/1", "host": ["{{base_url}}"], "path": ["order-status-histories", "1"] }
-					}
-				},
-				{
-					"name": "Update Status History",
-					"request": {
-						"method": "PATCH",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Content-Type", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{active_token}}" }
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"note\": \"Pakaian telah selesai dicuci dan masuk ke mesin pengering\"\n}"
-						},
-						"url": { "raw": "{{base_url}}/order-status-histories/1", "host": ["{{base_url}}"], "path": ["order-status-histories", "1"] }
-					}
-				},
-				{
-					"name": "Delete Status History (Admin Only)",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{ "key": "Accept", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{admin_token}}" }
-						],
-						"url": { "raw": "{{base_url}}/order-status-histories/1", "host": ["{{base_url}}"], "path": ["order-status-histories", "1"] }
-					}
-				}
-			]
 		}
 	]
 }
