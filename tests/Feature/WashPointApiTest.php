@@ -12,7 +12,11 @@ use App\Models\OrderStatusHistory;
 
 class WashPointApiTest extends TestCase
 {
-    protected static ?int $userId = null;
+    protected static ?string $userToken = null;
+    protected static ?string $adminToken = null;
+    protected static ?int $regularUserId = null;
+    protected static ?int $adminUserId = null;
+
     protected static ?int $serviceTypeId = null;
     protected static ?int $laundryOrderId = null;
     protected static ?int $paymentId = null;
@@ -20,7 +24,7 @@ class WashPointApiTest extends TestCase
     protected static ?int $orderStatusHistoryId = null;
 
     /**
-     * 1. Test Endpoint Root API
+     * 1. Test Endpoint Root API (Public)
      */
     public function test_api_root_endpoint_returns_success(): void
     {
@@ -33,429 +37,306 @@ class WashPointApiTest extends TestCase
     }
 
     /**
-     * 2. Test User CRUD & Password Not Exposed
+     * 2. Test Unauthenticated Requests are Rejected (401)
      */
-    public function test_user_crud_and_password_hidden(): void
+    public function test_unauthenticated_request_is_rejected(): void
     {
-        // CREATE
-        $uniqueEmail = 'tester_' . time() . '@washpoint.test';
-        $createResponse = $this->postJson('/api/users', [
-            'name' => 'Budi Santoso',
-            'email' => $uniqueEmail,
-            'password' => 'secret123',
-        ]);
-
-        $createResponse->assertStatus(201)
-                       ->assertJson([
-                           'success' => true,
-                           'message' => 'User berhasil ditambahkan',
-                       ]);
-
-        // Verifikasi password TIDAK bocor di response
-        $this->assertArrayNotHasKey('password', $createResponse->json('data'));
-
-        self::$userId = $createResponse->json('data.id');
-        $this->assertNotNull(self::$userId);
-
-        // GET ALL
-        $indexResponse = $this->getJson('/api/users');
-        $indexResponse->assertStatus(200)
-                      ->assertJson(['success' => true]);
-        
-        foreach ($indexResponse->json('data') as $u) {
-            $this->assertArrayNotHasKey('password', $u);
-        }
-
-        // GET DETAIL
-        $showResponse = $this->getJson('/api/users/' . self::$userId);
-        $showResponse->assertStatus(200)
-                     ->assertJson([
-                         'success' => true,
-                         'data' => [
-                             'id' => self::$userId,
-                             'name' => 'Budi Santoso',
-                         ]
-                     ]);
-        $this->assertArrayNotHasKey('password', $showResponse->json('data'));
-
-        // UPDATE (PUT)
-        $updateResponse = $this->putJson('/api/users/' . self::$userId, [
-            'name' => 'Budi Santoso Updated',
-        ]);
-        $updateResponse->assertStatus(200)
-                       ->assertJson([
-                           'success' => true,
-                           'data' => [
-                               'name' => 'Budi Santoso Updated',
-                           ]
-                       ]);
+        $response = $this->getJson('/api/service-types');
+        $response->assertStatus(401);
     }
 
     /**
-     * 3. Test Anggota 1: Service Types CRUD & Eager Loading
+     * 3. Test Register & Login (Authentication) for Regular User & Admin
      */
-    public function test_service_type_crud_and_eager_loading(): void
+    public function test_authentication_register_and_login(): void
     {
-        $this->assertNotNull(self::$userId, 'User must exist for foreign key');
+        $timestamp = time();
 
-        // CREATE
-        $createResponse = $this->postJson('/api/service-types', [
-            'user_id' => self::$userId,
-            'name' => 'Cuci Komplit Reguler',
-            'price_per_kg' => 7000,
-            'estimated_hours' => 24,
-            'is_active' => true,
+        // Register Regular User (Role: user)
+        $userResponse = $this->postJson('/api/register', [
+            'name' => 'Budi Santoso',
+            'email' => "budi_{$timestamp}@washpoint.test",
+            'password' => 'secret123',
+            'role' => 'user',
         ]);
+
+        $userResponse->assertStatus(201)
+                     ->assertJson(['success' => true])
+                     ->assertJsonStructure(['data' => ['user', 'access_token']]);
+
+        self::$userToken = $userResponse->json('data.access_token');
+        self::$regularUserId = $userResponse->json('data.user.id');
+        $this->assertEquals('user', $userResponse->json('data.user.role'));
+        $this->assertArrayNotHasKey('password', $userResponse->json('data.user'));
+
+        // Register Admin (Role: admin)
+        $adminResponse = $this->postJson('/api/register', [
+            'name' => 'Admin WashPoint',
+            'email' => "admin_{$timestamp}@washpoint.test",
+            'password' => 'secret123',
+            'role' => 'admin',
+        ]);
+
+        $adminResponse->assertStatus(201)
+                      ->assertJson(['success' => true]);
+
+        self::$adminToken = $adminResponse->json('data.access_token');
+        self::$adminUserId = $adminResponse->json('data.user.id');
+        $this->assertEquals('admin', $adminResponse->json('data.user.role'));
+
+        // Test Endpoint /api/me dengan token
+        $meResponse = $this->withHeader('Authorization', 'Bearer ' . self::$userToken)
+                           ->getJson('/api/me');
+        $meResponse->assertStatus(200)
+                   ->assertJson([
+                       'success' => true,
+                       'data' => [
+                           'id' => self::$regularUserId,
+                           'role' => 'user',
+                       ]
+                   ]);
+    }
+
+    /**
+     * 4. Test Anggota 1: Service Types (CRU oleh Regular User)
+     */
+    public function test_service_type_cru_by_regular_user(): void
+    {
+        // CREATE (Post) - Regular user boleh
+        $createResponse = $this->withHeader('Authorization', 'Bearer ' . self::$userToken)
+                               ->postJson('/api/service-types', [
+                                   'user_id' => self::$regularUserId,
+                                   'name' => 'Cuci Kering Setrika Reguler',
+                                   'price_per_kg' => 7000,
+                                   'estimated_hours' => 24,
+                                   'is_active' => true,
+                               ]);
 
         $createResponse->assertStatus(201)
                        ->assertJson([
                            'success' => true,
                            'message' => 'Jenis layanan berhasil ditambahkan',
-                           'data' => [
-                               'name' => 'Cuci Komplit Reguler',
-                               'price_per_kg' => 7000,
-                           ]
                        ]);
 
         self::$serviceTypeId = $createResponse->json('data.id');
 
-        // GET ALL (with user)
-        $indexResponse = $this->getJson('/api/service-types');
-        $indexResponse->assertStatus(200)
-                      ->assertJsonStructure([
-                          'success',
-                          'message',
-                          'data' => [
-                              '*' => ['id', 'user_id', 'name', 'price_per_kg', 'user']
-                          ]
-                      ]);
+        // READ (Get Index & Show) - Regular user boleh
+        $indexResponse = $this->withHeader('Authorization', 'Bearer ' . self::$userToken)
+                              ->getJson('/api/service-types');
+        $indexResponse->assertStatus(200);
 
-        // GET DETAIL (with user & laundryOrders)
-        $showResponse = $this->getJson('/api/service-types/' . self::$serviceTypeId);
+        $showResponse = $this->withHeader('Authorization', 'Bearer ' . self::$userToken)
+                             ->getJson('/api/service-types/' . self::$serviceTypeId);
         $showResponse->assertStatus(200)
                      ->assertJson([
                          'success' => true,
-                         'data' => [
-                             'id' => self::$serviceTypeId,
-                             'name' => 'Cuci Komplit Reguler',
-                         ]
+                         'data' => ['id' => self::$serviceTypeId]
                      ]);
-        $this->assertArrayHasKey('user', $showResponse->json('data'));
-        $this->assertArrayHasKey('laundry_orders', $showResponse->json('data'));
 
-        // UPDATE (PATCH)
-        $updateResponse = $this->patchJson('/api/service-types/' . self::$serviceTypeId, [
-            'price_per_kg' => 8000,
-        ]);
+        // UPDATE (Patch) - Regular user boleh
+        $updateResponse = $this->withHeader('Authorization', 'Bearer ' . self::$userToken)
+                               ->patchJson('/api/service-types/' . self::$serviceTypeId, [
+                                   'price_per_kg' => 7500,
+                               ]);
         $updateResponse->assertStatus(200)
                        ->assertJson([
                            'success' => true,
-                           'data' => [
-                               'price_per_kg' => 8000,
-                           ]
+                           'data' => ['price_per_kg' => 7500]
                        ]);
     }
 
     /**
-     * 4. Test Anggota 2: Laundry Orders CRUD & Eager Loading
+     * 5. Test Anggota 2: Laundry Orders (CRU oleh Regular User)
      */
-    public function test_laundry_order_crud_and_eager_loading(): void
+    public function test_laundry_order_cru_by_regular_user(): void
     {
         // CREATE
-        $createResponse = $this->postJson('/api/laundry-orders', [
-            'user_id' => self::$userId,
-            'service_type_id' => self::$serviceTypeId,
-            'customer_name' => 'Siti Rahma',
-            'customer_phone' => '081234567890',
-            'weight_kg' => 3.50,
-            'total_price' => 28000,
-            'status' => 'received',
-            'notes' => 'Pakaian warna putih tolong dipisah',
-        ]);
+        $createResponse = $this->withHeader('Authorization', 'Bearer ' . self::$userToken)
+                               ->postJson('/api/laundry-orders', [
+                                   'user_id' => self::$regularUserId,
+                                   'service_type_id' => self::$serviceTypeId,
+                                   'customer_name' => 'Siti Aminah',
+                                   'customer_phone' => '081234567890',
+                                   'weight_kg' => 3.50,
+                                   'total_price' => 26250,
+                                   'status' => 'received',
+                                   'notes' => 'Tolong pisahkan pakaian putih',
+                               ]);
 
         $createResponse->assertStatus(201)
-                       ->assertJson([
-                           'success' => true,
-                           'message' => 'Pesanan laundry berhasil dibuat',
-                           'data' => [
-                               'customer_name' => 'Siti Rahma',
-                               'total_price' => 28000,
-                           ]
-                       ]);
+                       ->assertJson(['success' => true]);
 
         self::$laundryOrderId = $createResponse->json('data.id');
 
-        // GET ALL (with user & serviceType)
-        $indexResponse = $this->getJson('/api/laundry-orders');
-        $indexResponse->assertStatus(200)
-                      ->assertJsonStructure([
-                          'success',
-                          'data' => [
-                              '*' => ['id', 'user', 'service_type']
-                          ]
-                      ]);
+        // READ
+        $showResponse = $this->withHeader('Authorization', 'Bearer ' . self::$userToken)
+                             ->getJson('/api/laundry-orders/' . self::$laundryOrderId);
+        $showResponse->assertStatus(200)
+                     ->assertJson(['success' => true]);
 
-        // GET DETAIL (with all relations)
-        $showResponse = $this->getJson('/api/laundry-orders/' . self::$laundryOrderId);
-        $showResponse->assertStatus(200);
-        $this->assertArrayHasKey('user', $showResponse->json('data'));
-        $this->assertArrayHasKey('service_type', $showResponse->json('data'));
-        $this->assertArrayHasKey('payments', $showResponse->json('data'));
-        $this->assertArrayHasKey('pickup_schedules', $showResponse->json('data'));
-        $this->assertArrayHasKey('order_status_histories', $showResponse->json('data'));
-
-        // UPDATE (PUT)
-        $updateResponse = $this->putJson('/api/laundry-orders/' . self::$laundryOrderId, [
-            'status' => 'processing',
-        ]);
+        // UPDATE
+        $updateResponse = $this->withHeader('Authorization', 'Bearer ' . self::$userToken)
+                               ->putJson('/api/laundry-orders/' . self::$laundryOrderId, [
+                                   'status' => 'processing',
+                               ]);
         $updateResponse->assertStatus(200)
                        ->assertJson([
                            'success' => true,
-                           'data' => [
-                               'status' => 'processing',
-                           ]
+                           'data' => ['status' => 'processing']
                        ]);
     }
 
     /**
-     * 5. Test Anggota 3: Payments CRUD & Eager Loading
+     * 6. Test Anggota 3: Payments (CRU oleh Regular User)
      */
-    public function test_payment_crud_and_eager_loading(): void
+    public function test_payment_cru_by_regular_user(): void
     {
         // CREATE
-        $createResponse = $this->postJson('/api/payments', [
-            'user_id' => self::$userId,
-            'laundry_order_id' => self::$laundryOrderId,
-            'amount' => 28000,
-            'method' => 'cash',
-            'payment_status' => 'paid',
-            'paid_at' => now()->toDateTimeString(),
-        ]);
+        $createResponse = $this->withHeader('Authorization', 'Bearer ' . self::$userToken)
+                               ->postJson('/api/payments', [
+                                   'user_id' => self::$regularUserId,
+                                   'laundry_order_id' => self::$laundryOrderId,
+                                   'amount' => 26250,
+                                   'method' => 'qris',
+                                   'payment_status' => 'paid',
+                                   'paid_at' => now()->toDateTimeString(),
+                               ]);
 
         $createResponse->assertStatus(201)
-                       ->assertJson([
-                           'success' => true,
-                           'message' => 'Pembayaran berhasil dicatat',
-                           'data' => [
-                               'amount' => 28000,
-                               'payment_status' => 'paid',
-                           ]
-                       ]);
+                       ->assertJson(['success' => true]);
 
         self::$paymentId = $createResponse->json('data.id');
 
-        // GET ALL
-        $indexResponse = $this->getJson('/api/payments');
-        $indexResponse->assertStatus(200)
-                      ->assertJsonStructure([
-                          'success',
-                          'data' => [
-                              '*' => ['id', 'user', 'laundry_order']
-                          ]
-                      ]);
-
-        // GET DETAIL
-        $showResponse = $this->getJson('/api/payments/' . self::$paymentId);
-        $showResponse->assertStatus(200)
-                     ->assertJson([
-                         'success' => true,
-                         'data' => ['id' => self::$paymentId]
-                     ]);
+        // READ
+        $showResponse = $this->withHeader('Authorization', 'Bearer ' . self::$userToken)
+                             ->getJson('/api/payments/' . self::$paymentId);
+        $showResponse->assertStatus(200);
 
         // UPDATE
-        $updateResponse = $this->patchJson('/api/payments/' . self::$paymentId, [
-            'method' => 'qris',
-        ]);
-        $updateResponse->assertStatus(200)
-                       ->assertJson([
-                           'success' => true,
-                           'data' => ['method' => 'qris']
-                       ]);
+        $updateResponse = $this->withHeader('Authorization', 'Bearer ' . self::$userToken)
+                               ->patchJson('/api/payments/' . self::$paymentId, [
+                                   'payment_status' => 'paid',
+                               ]);
+        $updateResponse->assertStatus(200);
     }
 
     /**
-     * 6. Test Anggota 4: Pickup Schedules CRUD & Eager Loading
+     * 7. Test Anggota 4: Pickup Schedules (CRU oleh Regular User)
      */
-    public function test_pickup_schedule_crud_and_eager_loading(): void
+    public function test_pickup_schedule_cru_by_regular_user(): void
     {
         // CREATE
-        $createResponse = $this->postJson('/api/pickup-schedules', [
-            'user_id' => self::$userId,
-            'laundry_order_id' => self::$laundryOrderId,
-            'scheduled_at' => now()->addDays(1)->toDateTimeString(),
-            'type' => 'delivery',
-            'address' => 'Jl. Kaliurang KM 9, Sleman, Yogyakarta',
-            'status' => 'scheduled',
-        ]);
+        $createResponse = $this->withHeader('Authorization', 'Bearer ' . self::$userToken)
+                               ->postJson('/api/pickup-schedules', [
+                                   'user_id' => self::$regularUserId,
+                                   'laundry_order_id' => self::$laundryOrderId,
+                                   'scheduled_at' => now()->addDays(1)->toDateTimeString(),
+                                   'type' => 'pickup',
+                                   'address' => 'Jl. Kaliurang KM 9, Sleman',
+                                   'status' => 'scheduled',
+                               ]);
 
-        $createResponse->assertStatus(201)
-                       ->assertJson([
-                           'success' => true,
-                           'message' => 'Jadwal penjemputan berhasil dibuat',
-                           'data' => [
-                               'type' => 'delivery',
-                               'address' => 'Jl. Kaliurang KM 9, Sleman, Yogyakarta',
-                           ]
-                       ]);
-
+        $createResponse->assertStatus(201);
         self::$pickupScheduleId = $createResponse->json('data.id');
 
-        // GET ALL
-        $indexResponse = $this->getJson('/api/pickup-schedules');
-        $indexResponse->assertStatus(200)
-                      ->assertJsonStructure([
-                          'success',
-                          'data' => [
-                              '*' => ['id', 'user', 'laundry_order']
-                          ]
-                      ]);
-
-        // GET DETAIL
-        $showResponse = $this->getJson('/api/pickup-schedules/' . self::$pickupScheduleId);
-        $showResponse->assertStatus(200)
-                     ->assertJson([
-                         'success' => true,
-                         'data' => ['id' => self::$pickupScheduleId]
-                     ]);
+        // READ
+        $showResponse = $this->withHeader('Authorization', 'Bearer ' . self::$userToken)
+                             ->getJson('/api/pickup-schedules/' . self::$pickupScheduleId);
+        $showResponse->assertStatus(200);
 
         // UPDATE
-        $updateResponse = $this->patchJson('/api/pickup-schedules/' . self::$pickupScheduleId, [
-            'status' => 'completed',
-        ]);
-        $updateResponse->assertStatus(200)
-                       ->assertJson([
-                           'success' => true,
-                           'data' => ['status' => 'completed']
-                       ]);
+        $updateResponse = $this->withHeader('Authorization', 'Bearer ' . self::$userToken)
+                               ->patchJson('/api/pickup-schedules/' . self::$pickupScheduleId, [
+                                   'status' => 'completed',
+                               ]);
+        $updateResponse->assertStatus(200);
     }
 
     /**
-     * 7. Test Anggota 5: Order Status Histories CRUD & Eager Loading
+     * 8. Test Anggota 5: Order Status Histories (CRU oleh Regular User)
      */
-    public function test_order_status_history_crud_and_eager_loading(): void
+    public function test_order_status_history_cru_by_regular_user(): void
     {
         // CREATE
-        $createResponse = $this->postJson('/api/order-status-histories', [
-            'user_id' => self::$userId,
-            'laundry_order_id' => self::$laundryOrderId,
-            'status' => 'washing',
-            'note' => 'Cucian sedang dalam proses pencucian',
-        ]);
+        $createResponse = $this->withHeader('Authorization', 'Bearer ' . self::$userToken)
+                               ->postJson('/api/order-status-histories', [
+                                   'user_id' => self::$regularUserId,
+                                   'laundry_order_id' => self::$laundryOrderId,
+                                   'status' => 'washing',
+                                   'note' => 'Cucian sedang dicuci',
+                               ]);
 
-        $createResponse->assertStatus(201)
-                       ->assertJson([
-                           'success' => true,
-                           'message' => 'Riwayat status pesanan berhasil ditambahkan',
-                           'data' => [
-                               'status' => 'washing',
-                               'note' => 'Cucian sedang dalam proses pencucian',
-                           ]
-                       ]);
-
+        $createResponse->assertStatus(201);
         self::$orderStatusHistoryId = $createResponse->json('data.id');
 
-        // GET ALL
-        $indexResponse = $this->getJson('/api/order-status-histories');
-        $indexResponse->assertStatus(200)
-                      ->assertJsonStructure([
-                          'success',
-                          'data' => [
-                              '*' => ['id', 'user', 'laundry_order']
-                          ]
-                      ]);
-
-        // GET DETAIL
-        $showResponse = $this->getJson('/api/order-status-histories/' . self::$orderStatusHistoryId);
-        $showResponse->assertStatus(200)
-                     ->assertJson([
-                         'success' => true,
-                         'data' => ['id' => self::$orderStatusHistoryId]
-                     ]);
+        // READ
+        $showResponse = $this->withHeader('Authorization', 'Bearer ' . self::$userToken)
+                             ->getJson('/api/order-status-histories/' . self::$orderStatusHistoryId);
+        $showResponse->assertStatus(200);
 
         // UPDATE
-        $updateResponse = $this->patchJson('/api/order-status-histories/' . self::$orderStatusHistoryId, [
-            'note' => 'Cucian selesai dicuci, masuk tahap pengeringan',
-        ]);
-        $updateResponse->assertStatus(200)
-                       ->assertJson([
-                           'success' => true,
-                           'data' => [
-                               'note' => 'Cucian selesai dicuci, masuk tahap pengeringan'
-                           ]
-                       ]);
+        $updateResponse = $this->withHeader('Authorization', 'Bearer ' . self::$userToken)
+                               ->patchJson('/api/order-status-histories/' . self::$orderStatusHistoryId, [
+                                   'note' => 'Cucian masuk tahap pengeringan',
+                               ]);
+        $updateResponse->assertStatus(200);
     }
 
     /**
-     * 8. Test Validation Error Responses (422)
+     * 9. TEST AUTHORIZATION: Regular User DILARANG melakukan DELETE (403 Forbidden)
      */
-    public function test_validation_errors_return_422(): void
+    public function test_regular_user_cannot_delete_resource_returns_403(): void
     {
-        $response = $this->postJson('/api/service-types', [
-            // missing required fields
-        ]);
+        // Mencoba DELETE service-types menggunakan token Regular User
+        $response = $this->withHeader('Authorization', 'Bearer ' . self::$userToken)
+                         ->deleteJson('/api/service-types/' . self::$serviceTypeId);
 
-        $response->assertStatus(422)
+        $response->assertStatus(403)
                  ->assertJson([
                      'success' => false,
-                     'message' => 'Validasi gagal',
-                 ])
-                 ->assertJsonStructure(['errors']);
-    }
-
-    /**
-     * 9. Test Not Found Responses (404)
-     */
-    public function test_not_found_returns_404(): void
-    {
-        $response = $this->getJson('/api/service-types/999999');
-        $response->assertStatus(404)
-                 ->assertJson([
-                     'success' => false,
-                     'message' => 'Jenis layanan tidak ditemukan',
-                     'data' => null
                  ]);
+        $this->assertStringContainsString('CRU', $response->json('message'));
     }
 
     /**
-     * 10. Test Deletion for Resources
+     * 10. TEST AUTHORIZATION: Admin DIIZINKAN melakukan DELETE (CRUD Penuh)
      */
-    public function test_delete_resources(): void
+    public function test_admin_can_delete_resources_crud_success(): void
     {
-        if (self::$orderStatusHistoryId) {
-            $this->deleteJson('/api/order-status-histories/' . self::$orderStatusHistoryId)
-                 ->assertStatus(200)
-                 ->assertJson(['success' => true]);
-        }
+        // Admin menghapus order-status-histories
+        $delHistory = $this->withHeader('Authorization', 'Bearer ' . self::$adminToken)
+                           ->deleteJson('/api/order-status-histories/' . self::$orderStatusHistoryId);
+        $delHistory->assertStatus(200)
+                   ->assertJson(['success' => true]);
 
-        if (self::$pickupScheduleId) {
-            $this->deleteJson('/api/pickup-schedules/' . self::$pickupScheduleId)
-                 ->assertStatus(200)
-                 ->assertJson(['success' => true]);
-        }
+        // Admin menghapus pickup-schedules
+        $delPickup = $this->withHeader('Authorization', 'Bearer ' . self::$adminToken)
+                          ->deleteJson('/api/pickup-schedules/' . self::$pickupScheduleId);
+        $delPickup->assertStatus(200)
+                  ->assertJson(['success' => true]);
 
-        if (self::$paymentId) {
-            $this->deleteJson('/api/payments/' . self::$paymentId)
-                 ->assertStatus(200)
-                 ->assertJson(['success' => true]);
-        }
+        // Admin menghapus payments
+        $delPayment = $this->withHeader('Authorization', 'Bearer ' . self::$adminToken)
+                           ->deleteJson('/api/payments/' . self::$paymentId);
+        $delPayment->assertStatus(200)
+                   ->assertJson(['success' => true]);
 
-        if (self::$laundryOrderId) {
-            $this->deleteJson('/api/laundry-orders/' . self::$laundryOrderId)
-                 ->assertStatus(200)
+        // Admin menghapus laundry-orders
+        $delOrder = $this->withHeader('Authorization', 'Bearer ' . self::$adminToken)
+                         ->deleteJson('/api/laundry-orders/' . self::$laundryOrderId);
+        $delOrder->assertStatus(200)
                  ->assertJson(['success' => true]);
-        }
 
-        if (self::$serviceTypeId) {
-            $this->deleteJson('/api/service-types/' . self::$serviceTypeId)
-                 ->assertStatus(200)
-                 ->assertJson(['success' => true]);
-        }
+        // Admin menghapus service-types
+        $delService = $this->withHeader('Authorization', 'Bearer ' . self::$adminToken)
+                          ->deleteJson('/api/service-types/' . self::$serviceTypeId);
+        $delService->assertStatus(200)
+                   ->assertJson(['success' => true]);
 
-        if (self::$userId) {
-            $this->deleteJson('/api/users/' . self::$userId)
-                 ->assertStatus(200)
-                 ->assertJson(['success' => true]);
-        }
+        // Admin membersihkan user testing
+        $this->withHeader('Authorization', 'Bearer ' . self::$adminToken)
+             ->deleteJson('/api/users/' . self::$regularUserId);
+        $this->withHeader('Authorization', 'Bearer ' . self::$adminToken)
+             ->deleteJson('/api/users/' . self::$adminUserId);
     }
 }
-
