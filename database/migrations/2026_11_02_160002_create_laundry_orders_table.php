@@ -16,7 +16,7 @@ return new class extends Migration
             Schema::create('laundry_orders', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-                $table->foreignId('service_type_id')->constrained('service_types');
+                $table->foreignId('service_type_id')->constrained('service_types')->onDelete('cascade');
                 $table->string('customer_name', 100);
                 $table->string('customer_phone', 25);
                 $table->decimal('weight_kg', 8, 2);

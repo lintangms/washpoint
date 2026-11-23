@@ -1,0 +1,98 @@
+================================================================================
+INFORMASI PENGUMPULAN TUGAS KELOMPOK 5
+Ketua       : Lintang Muhammad Shiddiq - 255150607111009
+Anggota 1   : Eka Wahyu Maulidan - 255150600111029
+Anggota 2   : Mayqi Elang Putra Gufron - 255150601111003
+Anggota 3   : Muhammad Syahrial Alfadiaz - 255150600111027
+Anggota 4   : Rifky Achmad Arifiansyah - 255150607111003
+
+Mata Kuliah : Teknologi dan Sistem Terintegrasi
+================================================================================
+
+1. KONFIGURASI DATABASE (.env)
+--------------------------------------------------------------------------------
+DB_CONNECTION : mysql
+DB_HOST       : 127.0.0.1
+DB_PORT       : 3306
+DB_DATABASE   : washpoint
+DB_USERNAME   : root
+DB_PASSWORD   : 
+
+Catatan Setup Cepat:
+1. Buat database MySQL bernama `washpoint` (atau impor `database/sql/washpoint.sql`).
+2. Jalankan `composer install`
+3. Jalankan `php artisan migrate --seed` (atau `php artisan migrate:fresh --seed`)
+4. Jalankan `php artisan serve` (Base URL: http://127.0.0.1:8000/api)
+
+
+2. KREDENSIAL AKUN TESTING (HASIL DATABASE SEEDER)
+--------------------------------------------------------------------------------
+Semua akun di bawah ini otomatis dibuat saat menjalankan `php artisan db:seed`:
+
+[A] Role: admin (Akses CRUD penuh untuk seluruh data)
+    - Nama     : Admin WashPoint
+    - Email    : admin@washpoint.test
+    - Password : admin123
+
+[B] Role: user (Akses CRU; Update hanya untuk data miliknya sendiri / Ownership;
+    DELETE ditolak 403 Forbidden)
+    - Nama     : Budi Kasir
+    - Email    : user@washpoint.test
+    - Password : user123
+
+[C] Role: user tambahan (untuk pengujian Ownership antar-user di Postman)
+    - Nama     : Siti Petugas
+    - Email    : user2@washpoint.test
+    - Password : user123
+
+
+3. STRUKTUR TABEL & RELASI
+--------------------------------------------------------------------------------
+- users                  : Tabel induk autentikasi & role (admin / user)
+- service_types          : Anggota 1 - FK user_id -> users.id
+- laundry_orders         : Anggota 2 - FK user_id -> users.id, service_type_id -> service_types.id
+- payments               : Anggota 3 - FK user_id -> users.id, laundry_order_id -> laundry_orders.id
+- pickup_schedules       : Anggota 4 - FK user_id -> users.id, laundry_order_id -> laundry_orders.id
+- order_status_histories : Anggota 5 - FK user_id -> users.id, laundry_order_id -> laundry_orders.id
+
+
+4. DAFTAR ENDPOINT API & HAK AKSES
+--------------------------------------------------------------------------------
+Base URL: http://127.0.0.1:8000/api
+Header Wajib untuk Endpoint Terproteksi:
+  Accept        : application/json
+  Content-Type  : application/json
+  Authorization : Bearer <access_token>
+
+A. ENDPOINT PUBLIK (Tanpa Login)
+  GET    /api                                 | Publik | Cek status server & daftar endpoint
+  GET    /api/public/service-types            | Publik | Katalog jenis layanan laundry aktif
+  POST   /api/register                        | Publik | Registrasi akun baru (role: user/admin)
+  POST   /api/login                           | Publik | Login & mendapatkan JWT Bearer Token
+
+B. AUTENTIKASI TERPROTEKSI (Login: user & admin)
+  GET    /api/me                              | user & admin | Melihat profil user yang sedang login
+  POST   /api/logout                          | user & admin | Mengakhiri sesi login
+
+C. RESOURCE UTAMA & 5 MODUL ANGGOTA (Login: Bearer Token)
+  Berlaku untuk seluruh resource berikut:
+  - /api/users                                (Manajemen Users)
+  - /api/service-types                        (Anggota 1: Jenis Layanan Laundry)
+  - /api/laundry-orders                       (Anggota 2: Pesanan Laundry)
+  - /api/payments                             (Anggota 3: Pembayaran)
+  - /api/pickup-schedules                     (Anggota 4: Jadwal Pickup/Delivery)
+  - /api/order-status-histories               (Anggota 5: Riwayat Status Pesanan)
+
+  Method & Hak Akses pada setiap {resource}:
+  GET    /api/{resource}                      | user & admin | Read semua data (beserta relasi)
+  GET    /api/{resource}/{id}                 | user & admin | Read detail data berdasarkan ID
+  POST   /api/{resource}                      | user & admin | Create data baru (user_id otomatis dari token)
+  PUT    /api/{resource}/{id}                 | user (Milik Sendiri / Ownership) & admin (Semua Data)
+  PATCH  /api/{resource}/{id}                 | user (Milik Sendiri / Ownership) & admin (Semua Data)
+  DELETE /api/{resource}/{id}                 | HANYA admin (role user ditolak 403 Forbidden)
+
+Catatan Pengujian Nilai Tambah (Ownership):
+- Login sebagai `user@washpoint.test` (ID 2), coba PATCH `/api/service-types/1` (milik user 1) -> 200 OK.
+- Tetap pakai token `user@washpoint.test`, coba PATCH `/api/service-types/2` (milik user2) -> 403 Forbidden.
+- Login sebagai `admin@washpoint.test`, coba PATCH dan DELETE `/api/service-types/2` -> 200 OK.
+================================================================================

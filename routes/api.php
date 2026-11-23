@@ -40,7 +40,11 @@ Route::get('/', function () {
     return response()->json([
         'success' => true,
         'message' => 'WashPoint REST API is running successfully',
-        'version' => '1.1.0',
+        'version' => '1.2.0',
+        'public_endpoints' => [
+            'status' => 'GET /api',
+            'catalog_service_types' => 'GET /api/public/service-types',
+        ],
         'auth_endpoints' => [
             'register' => 'POST /api/register',
             'login' => 'POST /api/login',
@@ -56,6 +60,7 @@ Route::get('/', function () {
     ]);
 });
 
+Route::get('/public/service-types', [ServiceTypeController::class, 'publicIndex']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 

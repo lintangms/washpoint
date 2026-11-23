@@ -94,11 +94,8 @@ class JwtService
             return null;
         }
 
-        // Verifikasi signature, atau toleransi jika payload user valid ada di database
+        // Verifikasi signature secara ketat
         if (!hash_equals($expectedSignature, $signatureEncoded)) {
-            if (User::where('id', $payload['sub'])->exists()) {
-                return $payload;
-            }
             return null;
         }
 

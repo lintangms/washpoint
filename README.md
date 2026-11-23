@@ -248,24 +248,23 @@ Duration: 3.88s
 ## 7. Panduan Menjalankan & Pengumpulan di BRONE
 
 ### Menjalankan di Lokal:
-1. Pastikan Apache & MySQL di XAMPP aktif.
-2. Salin template environment:
+1. Pastikan MySQL aktif (Laragon / XAMPP) dan buat database `washpoint` (atau impor `database/sql/washpoint.sql`).
+2. Install dependensi Composer:
    ```bash
-   cp .env.example .env
+   composer install
    ```
-3. Generate key & jalankan migrasi database:
+3. Jalankan migrasi & seeder database:
    ```bash
-   php artisan key:generate
-   php artisan migrate
+   php artisan migrate --seed
    ```
 4. Jalankan server Laravel:
    ```bash
    php artisan serve
    ```
-5. Buka Postman dan import file: `WashPoint_API.postman_collection.json`.
+5. Cek detail kredensial testing (`admin` & `user`) dan daftar endpoint pada `INFO_KELOMPOK5.txt`, lalu uji di Postman (koleksi tersedia di `WashPoint_API.postman_collection.json`).
 
 ### Pengumpulan di BRONE (Format ZIP):
-Sesuai instruksi pengumpulan:
-- File `.env` **TIDAK** disertakan (sudah ada `.env.example`).
-- Folder `vendor/` **TIDAK** disertakan.
-- Jalankan script `export_assignment.ps1` untuk otomatis membuat file `washpoint-api.zip` siap kumpul.
+Sesuai instruksi pengumpulan Kelompok 5:
+- Nama arsip: **`KELOMPOK5.zip`** (berisi projek Laravel dan `INFO_KELOMPOK5.txt`).
+- File `.env` dan `.env.example` **DISERTAKAN**, sedangkan folder `vendor/` dan `node_modules/` **TIDAK** disertakan.
+- Jalankan script `export_assignment.ps1` untuk otomatis membuat file `KELOMPOK5.zip` siap kumpul.

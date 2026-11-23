@@ -45,7 +45,10 @@ class PaymentController extends Controller
                 'paid_at' => 'nullable|date',
             ]);
 
-            $userId = $validated['user_id'] ?? $request->user()?->id ?? \App\Models\User::first()?->id ?? 1;
+            $authUser = $request->user();
+            $userId = ($authUser && $authUser->isAdmin() && isset($validated['user_id']))
+                ? $validated['user_id']
+                : ($authUser?->id ?? \App\Models\User::first()?->id ?? 1);
 
             // Jika laundry_order_id tidak diisi, ambil order terakhir atau buat otomatis agar tidak error FK
             $orderId = $validated['laundry_order_id'] ?? \App\Models\LaundryOrder::latest()->first()?->id;
@@ -151,6 +154,14 @@ class PaymentController extends Controller
                 ], 404);
             }
 
+            $authUser = $request->user();
+            if ($authUser && !$authUser->isAdmin() && (int) $payment->user_id !== (int) $authUser->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Akses ditolak (Forbidden). Role 'user' hanya diizinkan mengubah data pembayaran miliknya sendiri."
+                ], 403);
+            }
+
             $validated = $request->validate([
                 'user_id' => 'sometimes|required|exists:users,id',
                 'laundry_order_id' => 'sometimes|required|exists:laundry_orders,id',
@@ -159,6 +170,10 @@ class PaymentController extends Controller
                 'payment_status' => 'nullable|string|max:30',
                 'paid_at' => 'nullable|date',
             ]);
+
+            if ($authUser && !$authUser->isAdmin()) {
+                unset($validated['user_id']);
+            }
 
             $payment->update($validated);
 

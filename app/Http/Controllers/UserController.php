@@ -115,12 +115,27 @@ class UserController extends Controller
                 ], 404);
             }
 
+            $authUser = $request->user();
+            if ($authUser && !$authUser->isAdmin() && (int) $user->id !== (int) $authUser->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Akses ditolak (Forbidden). Role 'user' hanya diizinkan mengubah data akun miliknya sendiri."
+                ], 403);
+            }
+
             $validated = $request->validate([
                 'name' => 'sometimes|required|string|max:255',
                 'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $user->id,
                 'password' => 'nullable|string|min:6',
                 'role' => 'nullable|string|in:admin,user',
             ]);
+
+            if ($authUser && !$authUser->isAdmin() && isset($validated['role']) && $validated['role'] !== $user->role) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Akses ditolak (Forbidden). Role 'user' tidak diizinkan mengubah role akun."
+                ], 403);
+            }
 
             if (isset($validated['name'])) {
                 $user->name = $validated['name'];
@@ -131,7 +146,7 @@ class UserController extends Controller
             if (!empty($validated['password'])) {
                 $user->password = Hash::make($validated['password']);
             }
-            if (isset($validated['role'])) {
+            if (isset($validated['role']) && (!$authUser || $authUser->isAdmin())) {
                 $user->role = $validated['role'];
             }
 

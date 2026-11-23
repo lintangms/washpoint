@@ -47,7 +47,10 @@ class LaundryOrderController extends Controller
                 'notes' => 'nullable|string',
             ]);
 
-            $userId = $validated['user_id'] ?? $request->user()?->id ?? \App\Models\User::first()?->id ?? 1;
+            $authUser = $request->user();
+            $userId = ($authUser && $authUser->isAdmin() && isset($validated['user_id']))
+                ? $validated['user_id']
+                : ($authUser?->id ?? \App\Models\User::first()?->id ?? 1);
 
             // Jika service_type_id tidak diisi, ambil service_type pertama yang tersedia atau buat default
             $serviceTypeId = $validated['service_type_id'] ?? \App\Models\ServiceType::first()?->id;
@@ -151,6 +154,14 @@ class LaundryOrderController extends Controller
                 ], 404);
             }
 
+            $authUser = $request->user();
+            if ($authUser && !$authUser->isAdmin() && (int) $order->user_id !== (int) $authUser->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Akses ditolak (Forbidden). Role 'user' hanya diizinkan mengubah data pesanan laundry miliknya sendiri."
+                ], 403);
+            }
+
             $validated = $request->validate([
                 'user_id' => 'sometimes|required|exists:users,id',
                 'service_type_id' => 'sometimes|required|exists:service_types,id',
@@ -161,6 +172,10 @@ class LaundryOrderController extends Controller
                 'status' => 'nullable|string|max:30',
                 'notes' => 'nullable|string',
             ]);
+
+            if ($authUser && !$authUser->isAdmin()) {
+                unset($validated['user_id']);
+            }
 
             $order->update($validated);
 

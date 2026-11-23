@@ -45,7 +45,10 @@ class PickupScheduleController extends Controller
                 'status' => 'nullable|string|max:30',
             ]);
 
-            $userId = $validated['user_id'] ?? $request->user()?->id ?? \App\Models\User::first()?->id ?? 1;
+            $authUser = $request->user();
+            $userId = ($authUser && $authUser->isAdmin() && isset($validated['user_id']))
+                ? $validated['user_id']
+                : ($authUser?->id ?? \App\Models\User::first()?->id ?? 1);
 
             $orderId = $validated['laundry_order_id'] ?? \App\Models\LaundryOrder::latest()->first()?->id;
             if (!$orderId) {
@@ -146,6 +149,14 @@ class PickupScheduleController extends Controller
                 ], 404);
             }
 
+            $authUser = $request->user();
+            if ($authUser && !$authUser->isAdmin() && (int) $schedule->user_id !== (int) $authUser->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Akses ditolak (Forbidden). Role 'user' hanya diizinkan mengubah jadwal penjemputan miliknya sendiri."
+                ], 403);
+            }
+
             $validated = $request->validate([
                 'user_id' => 'sometimes|required|exists:users,id',
                 'laundry_order_id' => 'sometimes|required|exists:laundry_orders,id',
@@ -154,6 +165,10 @@ class PickupScheduleController extends Controller
                 'address' => 'sometimes|required|string|max:255',
                 'status' => 'nullable|string|max:30',
             ]);
+
+            if ($authUser && !$authUser->isAdmin()) {
+                unset($validated['user_id']);
+            }
 
             $schedule->update($validated);
 
